@@ -379,7 +379,7 @@ void singlecommand(char *last, node_t *start, node_o *outputhead,
         while (n--) {
           struct stat file_status;
           if (stat(namelist[n]->d_name, &file_status) == 0) {
-            printf("%s (%lld bytes)\n", namelist[n]->d_name,
+            printf("%s (%ld bytes)\n", namelist[n]->d_name,
                    file_status.st_size);
           }
 
