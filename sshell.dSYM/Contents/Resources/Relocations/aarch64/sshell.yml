@@ -1,0 +1,18 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/ashwin/Documents/cse150/cse150/p1/sshell'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _push, symObjAddr: 0x0, symBinAddr: 0x100002BD0, symSize: 0xA8 }
+  - { offsetInCU: 0x108, offset: 0x108, size: 0x8, addend: 0x0, symName: _push, symObjAddr: 0x0, symBinAddr: 0x100002BD0, symSize: 0xA8 }
+  - { offsetInCU: 0x164, offset: 0x164, size: 0x8, addend: 0x0, symName: _pop, symObjAddr: 0xA8, symBinAddr: 0x100002C78, symSize: 0x8C }
+  - { offsetInCU: 0x1A8, offset: 0x1A8, size: 0x8, addend: 0x0, symName: _peek, symObjAddr: 0x134, symBinAddr: 0x100002D04, symSize: 0x80 }
+  - { offsetInCU: 0x1EC, offset: 0x1EC, size: 0x8, addend: 0x0, symName: _pushargs, symObjAddr: 0x1B4, symBinAddr: 0x100002D84, symSize: 0x80 }
+  - { offsetInCU: 0x22C, offset: 0x22C, size: 0x8, addend: 0x0, symName: _popargs, symObjAddr: 0x234, symBinAddr: 0x100002E04, symSize: 0x8C }
+  - { offsetInCU: 0x270, offset: 0x270, size: 0x8, addend: 0x0, symName: _pushoutput, symObjAddr: 0x2C0, symBinAddr: 0x100002E90, symSize: 0x80 }
+  - { offsetInCU: 0x2B0, offset: 0x2B0, size: 0x8, addend: 0x0, symName: _popoutput, symObjAddr: 0x340, symBinAddr: 0x100002F10, symSize: 0x8C }
+  - { offsetInCU: 0x2F4, offset: 0x2F4, size: 0x8, addend: 0x0, symName: _cmdlineparse, symObjAddr: 0x3CC, symBinAddr: 0x100002F9C, symSize: 0x1C8 }
+  - { offsetInCU: 0x3C0, offset: 0x3C0, size: 0x8, addend: 0x0, symName: _few, symObjAddr: 0x594, symBinAddr: 0x100003164, symSize: 0x540 }
+  - { offsetInCU: 0x50C, offset: 0x50C, size: 0x8, addend: 0x0, symName: _manreet, symObjAddr: 0xAD4, symBinAddr: 0x1000036A4, symSize: 0x344 }
+  - { offsetInCU: 0x5D8, offset: 0x5D8, size: 0x8, addend: 0x0, symName: _trimtrail, symObjAddr: 0xE18, symBinAddr: 0x1000039E8, symSize: 0x70 }
+  - { offsetInCU: 0x60D, offset: 0x60D, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0xE88, symBinAddr: 0x100003A58, symSize: 0x2A8 }
+...

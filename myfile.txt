@@ -1,0 +1,5 @@
+Hello world from the Unix shell
+This is a test file
+Learning about pipes and redirection
+Unix commands are fun to use
+Another line with text data

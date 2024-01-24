@@ -1,0 +1,10 @@
+      20 ./output/sshell
+      20 ./output/sshell.dSYM/Contents/Info.plist
+      20 ./sshell.dSYM/Contents/Info.plist
+      23 ./sshell
+      31 ./sshell_ref
+      73 ./sshell.dSYM/Contents/Resources/DWARF/sshell
+      97 ./output/sshell.dSYM/Contents/Resources/DWARF/sshell
+     271 ./test.c
+     620 ./sshell.c
+    1226 total
