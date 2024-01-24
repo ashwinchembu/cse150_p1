@@ -38,7 +38,7 @@ typedef struct outputnode {
 
 void push(node_t *head, char *cmd, node_a *args, int nargs, char *type,
           int count) {
-  // printf("cmd: %s, count: %d\n",cmd, count);
+  //printf("cmd: %s, count: %d\n",cmd, count);
   node_t *current = head;
   while (current->next != NULL) {
     current = current->next;
@@ -55,7 +55,7 @@ void push(node_t *head, char *cmd, node_a *args, int nargs, char *type,
 }
 
 char *pop(node_t **head) {
-  printf("popping: %s\n", (*head)->cmd);
+  //printf("popping: %s\n", (*head)->cmd);
   char *retval = NULL;
   node_t *next_node = NULL;
 
@@ -549,7 +549,7 @@ int main(void) {
   // int original_stdout = dup(STDOUT_FILENO);
   while (1) {
     bool file = false;
-    memset(newcmd, 0, CMDLINE_MAX);
+    //memset(newcmd, 0, CMDLINE_MAX);
     char *nl;
     // int retval;
 
@@ -561,8 +561,10 @@ int main(void) {
     /* Get command line */
     // printf("%d", fileno(stdin));
     fgets(newcmd, CMDLINE_MAX, stdin);
+    //printf("%s", newcmd);
 
     /* Print command line if stdin is not provided by terminal */
+    
     if (!isatty(STDIN_FILENO)) {
       printf("%s", newcmd);
       fflush(stdout);
@@ -577,6 +579,7 @@ int main(void) {
     /* Builtin command */
     if (!strcmp(newcmd, "exit")) {
       fprintf(stderr, "Bye...\n");
+      fprintf(stderr, "+ completed '%s' [0]\n", newcmd);
       break;
     }
 
@@ -677,8 +680,8 @@ int main(void) {
         /*while (peek(&start) != NULL){
           pop(&start);
         }*/
-        free(ocurr);
-        free(head);
+        popoutput(&ocurr);
+        pop(&head);
         // free(&newcmd);
 
       } else {
