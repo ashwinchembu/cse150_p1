@@ -1,5 +1,7 @@
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +24,8 @@ typedef struct node {
   char *type;
   int nargs;
   int count;
+  bool isredirect;
+  char* redirect[2];
 } node_t;
 
 typedef struct anode {
@@ -37,7 +41,7 @@ typedef struct outputnode {
 // push, pop, popall and peek for commands linked lists
 
 void push(node_t *head, char *cmd, node_a *args, int nargs, char *type,
-          int count) {
+          int count, char** redirects) {
   //printf("cmd: %s, count: %d\n",cmd, count);
   node_t *current = head;
   while (current->next != NULL) {
@@ -51,6 +55,18 @@ void push(node_t *head, char *cmd, node_a *args, int nargs, char *type,
   current->next->nargs = nargs;
   current->next->type = type;
   current->next->count = count;
+  //printf("%d\n", redirects[0]);
+  if (redirects != NULL){
+  current->next->redirect[0] = redirects[0];
+  current->next->redirect[1] = redirects[1];
+  current->next->isredirect = true;
+  //printf("set redirect: %d redirect info: %s, %s \n", current->next->isredirect,  current->next->redirect[0], current->next->redirect[1]);
+  }
+  else{
+    current->next->redirect[0] = NULL;
+    current->next->redirect[1] = NULL;
+    current->next->isredirect = false;
+  }
   current->next->next = NULL;
 }
 
@@ -62,9 +78,15 @@ char *pop(node_t **head) {
   if (*head == NULL) {
     return NULL;
   }
-
   next_node = (*head)->next;
   retval = (*head)->cmd;
+  if((*head)->type != NULL){
+  free((*head)->type);
+  }
+  if ((*head)->isredirect){
+  free((*head)->redirect[0]);
+  free((*head)->redirect[1]);
+  }
   free(*head);
   *head = next_node;
 
@@ -73,12 +95,9 @@ char *pop(node_t **head) {
 
 void popall(node_t **head) {
   // printf("poping all\n");
-  char *clear = "clear";
-  if (*head == NULL) {
-    return;
-  }
-  while (clear != NULL) {
-    clear = pop(head);
+  while (*head == NULL) {
+    char* clear = pop(head);
+    free(clear);
   }
   return;
 }
@@ -100,6 +119,7 @@ char *peek(node_t **head) {
 // push and pop for arguments linked lists
 
 void pushargs(node_a *head, char *argin) {
+  //printf("pushing: %s\n", argin);
   node_a *current = head;
   while (current->next != NULL) {
     current = current->next;
@@ -150,6 +170,7 @@ int popoutput(node_o **head) {
 
   next_node = (*head)->next;
   retval = (*head)->n;
+  //free((*head)->n);
   free(*head);
   *head = next_node;
 
@@ -160,38 +181,61 @@ int cmdlineparse(node_t *node, char *commandline) {
   int count = 0;
   const char delimiters[] = " ";
   char *token;
+  char* redirect[2];
+  bool isredirectcheck = false;
 
   /* get the first token */
   token = strtok(commandline, delimiters);
   node_t *tempheadc = node;
   /* walk through other tokens */
   while (token != NULL) {
-    // parse ommand
+    // parse command
     char *cmd = strdup(token);
-
+    char* arg;
     token = strtok(NULL, delimiters);
     node_a *tempheada = malloc(sizeof(node_a));
     tempheada->arg = "TEMP";
     tempheada->next = NULL;
     int nargs = 0;
-    while (token != NULL && token[0] != '>' && token[0] != '|' &&
-           strcmp(token, ">>")) {
+    while (token != NULL && token[0] != '|') {
       // parse args until pipe, redirection or end
-      char *arg = strdup(token);
+      //printf("arg: %s\n", token);
+      if (token[0] != '>' &&  strcmp(token, ">>")){
+      arg = strdup(token);
       nargs++;
       pushargs(tempheada, arg);
       token = strtok(NULL, delimiters);
+      }
+      else if (token[0] == '>' || strcmp(token, ">>") == 0) {
+        char *operation = strdup(token);
+        token = strtok(NULL, delimiters);
+        char* filename = strdup(token);
+        redirect[0] = operation,
+        redirect[1] = filename;
+        //printf("redirects: %s, %s\n", redirect[0],redirect[1]);
+        token = strtok(NULL, delimiters);
+        isredirectcheck = true;
+      }
+
     }
+
     // push to overall linkedlist
     count++;
-    push(tempheadc, cmd, tempheada, nargs, "command", count - 1);
+    if (isredirectcheck){
+      push(tempheadc, cmd, tempheada, nargs, "command", count - 1, redirect);
+    }
+    else{
+      push(tempheadc, cmd, tempheada, nargs, "command", count - 1, NULL);
+    }
+
     // printf("adding command: %d\n", tempheadc->count);
     //  special commands
     if (token != NULL) {
+      //printf("hello");
       node_a *tempheadempty = malloc(sizeof(node_a));
       tempheadempty->arg = NULL;
       tempheadempty->next = NULL;
-      push(tempheadc, token, tempheadempty, 0, "operation", 0);
+      push(tempheadc, token, tempheadempty, 0, "operation", 0, NULL);
       /*
       printf("\n");
       printf("special: %s", token);
@@ -199,10 +243,13 @@ int cmdlineparse(node_t *node, char *commandline) {
       */
       token = strtok(NULL, delimiters);
     }
+
+
   }
+  //printf("done parsing");
+
   return count;
 }
-
 char **pullargs(node_t *node) {
   char **arguments = malloc(sizeof(char *) * (node->nargs + 2));
   arguments[0] = node->cmd;
@@ -227,7 +274,7 @@ void closepipearray(int pipearray[][2], int nums_cmd) {
 }
 void redirect(char *filename, char *rawoperation) {
   //char output[CMDLINE_MAX];
-  char buf[CMDLINE_MAX];
+  //char buf[CMDLINE_MAX];
   char filteredoperation[3];
   // printf("rawoperation: %s\n", rawoperation);
   if (strcmp(rawoperation, ">") == 0) {
@@ -244,10 +291,12 @@ void redirect(char *filename, char *rawoperation) {
     exit(-999);
   }
 
+/*
   while (fgets(buf, CMDLINE_MAX, stdin)) {
     // strcpy(output, buf);
-    fprintf(file, "%s", buf);
+    fprintf(file, "child [%d]: writing to file: %s", getpid(), buf);
   }
+  */
   // printf("output: %s \n", output);
   fclose(file);
   exit(-999);
@@ -255,7 +304,7 @@ void redirect(char *filename, char *rawoperation) {
 void singlecommand(char *last, node_t *start, node_o *outputhead,
                    int pipearray[][2], int nums_cmd) {
   // not redirection or piping
-  // printf("%s",cmd);
+  //printf("in single command: %s\n", start->cmd);
   // printf("no redirect\n");
 
   pid_t pid;
@@ -297,28 +346,46 @@ void singlecommand(char *last, node_t *start, node_o *outputhead,
   // printf("going to fork: %s, %s, %s \n", last, cmd, next);
   pid = fork();
   if (pid == 0) {
-    // printf("inside child: %d, cmd: %s\n", getpid(), cmd);
-    if (next != NULL && (strcmp(next, "|") == 0 || strcmp(next, ">") == 0 ||
-                         strcmp(next, ">>") == 0)) {
-      // printf("pipe out\n");
-      dup2(pipearray[start->count][1], STDOUT_FILENO);
-      // fprintf(stdout, "piped out\n");
-    }
-    if (last != NULL && (strcmp(last, "|") == 0 || strcmp(last, ">") == 0 ||
-                         strcmp(last, ">>") == 0)) {
+    //fflush(stdout);
+    //printf("inside child: %d, cmd: %s\n", getpid(), cmd);
+     if (last != NULL && (strcmp(last, "|") == 0)) {
       // printf("pipe in\n");
       dup2(pipearray[(start->count - 1)][0], STDIN_FILENO);
       // printf("piped in\n");
     }
+    if (next != NULL && (strcmp(next, "|") == 0)) {
+      // printf("pipe out\n");
+
+      dup2(pipearray[start->count][1], STDOUT_FILENO);
+      // fprintf(stdout, "piped out\n");
+    }
+    //file redirection needed
+    //printf("no pipes, checking redirect\n");
+    //printf("Redirection: %s, %s\n", start->redirect[0], start->redirect[1]);
+    //printf("is redirect?: %d\n", start->isredirect);
+    if (start->isredirect){
+      //printf("redirecting\n");
+      int fd;
+      //append
+      if (strcmp(start->redirect[0],">>" ) == 0){
+        fd = open(start->redirect[1],O_WRONLY|O_APPEND|O_CREAT, 0644);
+      }
+      else{
+        fd = open(start->redirect[1],O_WRONLY|O_TRUNC|O_CREAT, 0644);
+      }
+      dup2(fd, STDOUT_FILENO);
+    }
     closepipearray(pipearray, nums_cmd);
+    //printf("done with checks\n");
     // check if redirect and write to respective fi
     // printf("done piping\n");
+    /*
     if (last != NULL && (strcmp(last, ">") == 0 || strcmp(last, ">>") == 0)) {
       // dup2(fd[0], STDIN_FILENO);
       // if (strcmp(last, ">") == 0) {
       char *name = pop(&start);
       redirect(name, last);
-      /*
+
       char buf[CMDLINE_MAX];
       // output[0] = '\0';
       char *name = pop(&start);
@@ -360,10 +427,11 @@ void singlecommand(char *last, node_t *start, node_o *outputhead,
 
         fclose(file);
         exit(-999);
-      }*/
+      }
     }
+    */
     // check if sls
-    else if (strcmp(cmd, "sls") == 0) {
+    if (strcmp(cmd, "sls") == 0) {
       // sls modified from
       // https://man7.org/linux/man-pages/man3/scandir.3.html
       struct dirent **namelist;
@@ -411,14 +479,16 @@ void singlecommand(char *last, node_t *start, node_o *outputhead,
         printf("%s\n", buf);
       }
       */
-      // printf("command: %s\n", cmd);
+      
       popall(&start);
+      printf("command: %s\n", cmd);
       execvp(cmd, arguments);
       // perror("execvp");
       fprintf(stderr, "Error: command not found\n");
       exit(1);
     }
   } else if (pid > 0) {
+    free(cmd);
     // printf("child pid: %d\n",pid);
     // int status;
     // printf("waiting on child\n");
@@ -564,12 +634,13 @@ int main(void) {
     //printf("%s", newcmd);
 
     /* Print command line if stdin is not provided by terminal */
-    
+
     if (!isatty(STDIN_FILENO)) {
       printf("%s", newcmd);
       fflush(stdout);
     }
 
+    //printf("newcommand: %s", newcmd);
     /* Remove trailing newline from command line */
     nl = strchr(newcmd, '\n');
     if (nl)
@@ -622,14 +693,9 @@ int main(void) {
         while (start != NULL) {
           // printf("last command: %s\n", last);
           // printf("reading command: %s\n", start->cmd);
-          if (strcmp(start->cmd, "|") != 0 && strcmp(start->cmd, ">") != 0 &&
-              strcmp(start->cmd, ">>") != 0) {
+          if (strcmp(start->cmd, "|") != 0) {
             singlecommand(last, start, ocurr, pipearray, nums_cmd);
             // cmd_ind++;
-          }
-          if (strcmp(start->cmd, ">") == 0 || strcmp(start->cmd, ">>") == 0) {
-            // printf("FILE!");
-            file = true;
           }
           last = strdup(start->cmd);
           start = start->next;
@@ -640,7 +706,7 @@ int main(void) {
         for (c = 0; c < nums_cmd; c++) {
           int status;
           waitpid(WAIT_ANY, &status, 0);
-          // printf("child finished: %d\n", status);
+          //printf("child finished: %d\n", status);
           // printf("child: %s completed\n",  cmd);
           //  fprintf(stderr, "+ completed '%s' [%d]\n", rawcmd,
           //  WEXITSTATUS(status));
@@ -681,13 +747,14 @@ int main(void) {
           pop(&start);
         }*/
         popoutput(&ocurr);
-        pop(&head);
-        // free(&newcmd);
+        
+
 
       } else {
         continue;
       }
     }
+    free(rawcmd);
   }
 
   return EXIT_SUCCESS;
