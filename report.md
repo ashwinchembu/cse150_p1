@@ -38,7 +38,9 @@ CMDLINE_MAX) that holds the command the user wishes to execute
 (ex. "echo", "ls", "pwd", etc.). To further assist with the 
 logistics of the program, each command node contains an int
 variable called "nargs" and "count" to track how many arguments
-that command has, and how many total commands the user gave. If there is a redirect after a command, the variables isredirect and an array of the specific redirect command and filename are stored as well.
+that command has, and how many total commands the user gave. If there is a 
+redirect after a command, the variables isredirect and an array of the 
+specific redirect command and filename are stored as well.
 
 To connect these command nodes and create that linked list
 feature, the command node contains a pointer to the next
@@ -69,11 +71,15 @@ With delimiters[] = " ", the program grabs a token from the
 command line and while that token isn't null (until we run out 
 of information the user inputted), the program allocates a new 
 command node, attaches it to the head, and adds the token as the
-command. To ensure that we can determine that piping and redirection are being counter when there may not be spaces, adjspacing() runs before cmdline parse to make sure that they are appropriately separated.
+command. To ensure that we can determine that piping and redirection are 
+being counter when there may not be spaces, adjspacing() runs before
+ cmdline parse to make sure that they are appropriately separated.
 
 It keeps iterating through the command line and inputs the tokens
 into the argument linked list of that command, until it reaches 
-either a pipe ("|"), redirection (">",">>"), or the end (NULL). Once it reaches the redirection, it updates the redirect array in the command node_t in order to hold the type of redirect and the filename.
+either a pipe ("|"), redirection (">",">>"), or the end (NULL). Once it 
+reaches the redirection, it updates the redirect array in the command
+ node_t in order to hold the type of redirect and the filename.
 This marks the end of that command's arguments. It stores the
 next token (if not null) as the operation (pipe)
 into the next command head, and repeats the process. This captures
@@ -84,7 +90,9 @@ command linked list.
 
 ### Executing commands and Piping
 
-Before executing the commands, the linkedlist is run through a function and smaller tests in main() in order to ensure that it is a valid input(commands in wrong places, too many args, etc.).
+Before executing the commands, the linkedlist is run through a function and 
+smaller tests in main() in order to ensure that it is a valid input
+(commands in wrong places, too many args, etc.).
 
 To execute the commands, the program is given the head of the command
 linked list, and iterates through until the pointer to the next node
@@ -104,8 +112,12 @@ the child process dies, the program reverts back to the parent process.
 
 Before the program is ready to execute the command, it first checks
 whether the output of the current command needs to be pipped into the 
-next command or has to be redirected. It does so by peeking at the next command node through the peek() function which returns the value stored at 
-char *cmd of the next node. If that value is a pipe ("|"), the program will open a pipe and redirect the output from STD_OUT to the pipe for the next command to use. If there is a redirect value in the redirct array of the node, the function pipes stdout to the file directly.
+next command or has to be redirected. It does so by peeking at the next 
+command node through the peek() function which returns the value stored at 
+char *cmd of the next node. If that value is a pipe ("|"), the program will 
+open a pipe and redirect the output from STD_OUT to the pipe for the next 
+command to use. If there is a redirect value in the redirct array of the 
+node, the function pipes stdout to the file directly.
 
 After the program executes, if a pipe is next, the next
 command can then take that output and use it for its execution. The 
@@ -129,6 +141,22 @@ runs a function called popall() which clears all the nodes in the
 command linked list, and all associated argument linked lists before
 the end of each child that's created. 
 
+## Testing
+
+In order to test our project, we utilized various commands that had no 
+arguments, commands the maximum argument limit, various cases of piping and\ redirection/appending, and finally the edge cases in the project1.
+html. The greatest resource was the tester.sh which helped pinpoint where 
+functionality was lacking. Finally, ChatGPT was heavily used to generate a 
+plethora of edge test cases and test scripts to ensure the code worked to 
+the specification.
+
 ## Work of:
 
 This program is the work of Ashwin Cheembu and Manreet Sohi
+
+
+## Resources:
+https://www.learn-c.org/en/Linked_lists
+https://man7.org/linux/man-pages/man3/scandir.3.html
+
+
