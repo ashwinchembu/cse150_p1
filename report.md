@@ -144,7 +144,8 @@ the end of each child that's created.
 ## Testing
 
 In order to test our project, we utilized various commands that had no 
-arguments, commands the maximum argument limit, various cases of piping and\ redirection/appending, and finally the edge cases in the project1.
+arguments, commands the maximum argument limit, various cases of piping and
+redirection/appending, and finally the edge cases in the project1.
 html. The greatest resource was the tester.sh which helped pinpoint where 
 functionality was lacking. Finally, ChatGPT was heavily used to generate a 
 plethora of edge test cases and test scripts to ensure the code worked to 
