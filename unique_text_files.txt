@@ -1,3 +1,0 @@
--rw-r--r--  1 ashwin  staff      0 Jan 13 14:28 a.txt
--rw-r--r--  1 ashwin  staff      0 Jan 13 14:29 b.txt
--rw-r--r--  1 ashwin  staff      0 Jan 13 14:29 unique_text_files.txt
